@@ -175,3 +175,19 @@ exports.restoreEvent = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+/* ===============================
+   GET ALL EVENTS (ADMIN PANEL)
+=============================== */
+exports.getAllEventsAdmin = async (req, res) => {
+  try {
+    const events = await Event.find()
+      .populate("community", "name")
+      .populate("createdBy", "name")
+      .sort({ createdAt: -1 });
+
+    res.json(events);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

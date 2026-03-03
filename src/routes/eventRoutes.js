@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const { getAllEventsAdmin } = require("../controllers/eventController");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 const {
@@ -29,5 +29,5 @@ router.put("/:id/delete", protect, authorize("ADMIN"), deleteEvent);
 
 // 🔥 Restore (ADMIN only)
 router.put("/:id/restore", protect, authorize("ADMIN"), restoreEvent);
-
+router.get("/admin/all", protect, authorize("ADMIN"), getAllEventsAdmin);
 module.exports = router;
