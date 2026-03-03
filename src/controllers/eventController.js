@@ -14,8 +14,8 @@ exports.createEvent = async (req, res) => {
       description,
       date,
       location,
-      community,
       image: req.file ? req.file.filename : null,
+      community,
       createdBy: req.user._id,
       attendees: [req.user._id]
     });
@@ -32,7 +32,7 @@ exports.createEvent = async (req, res) => {
             type: "EVENT"
           });
 
-          // 🔥 REALTIME EMIT
+          // 🔥 Real-time emit
           if (global.io) {
             global.io
               .to(memberId.toString())
@@ -51,7 +51,7 @@ exports.createEvent = async (req, res) => {
 
 
 /* ===============================
-   GET EVENTS (WITH FILTER)
+   GET EVENTS (FILTER + HIDE DELETED)
 =============================== */
 exports.getEvents = async (req, res) => {
   try {
@@ -128,6 +128,48 @@ exports.leaveEvent = async (req, res) => {
     await event.save();
 
     res.json({ message: "Left event successfully" });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+/* ===============================
+   SOFT DELETE EVENT (ADMIN)
+=============================== */
+exports.deleteEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+
+    event.isDeleted = true;
+    await event.save();
+
+    res.json({ message: "Event soft deleted" });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+/* ===============================
+   RESTORE EVENT (ADMIN)
+=============================== */
+exports.restoreEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event)
+      return res.status(404).json({ message: "Event not found" });
+
+    event.isDeleted = false;
+    await event.save();
+
+    res.json({ message: "Event restored" });
 
   } catch (error) {
     res.status(500).json({ error: error.message });

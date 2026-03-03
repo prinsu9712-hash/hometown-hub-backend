@@ -2,43 +2,32 @@ const express = require("express");
 const router = express.Router();
 
 const { protect, authorize } = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
 
 const {
   createEvent,
   getEvents,
   joinEvent,
-  leaveEvent
+  leaveEvent,
+  deleteEvent,
+  restoreEvent
 } = require("../controllers/eventController");
 
-/* ==============================
-   CREATE EVENT (ADMIN / MODERATOR)
-============================== */
+// Create event (ADMIN or MODERATOR)
+router.post("/", protect, authorize("ADMIN", "MODERATOR"), createEvent);
 
-router.post(
-  "/",
-  protect,
-  authorize("ADMIN", "MODERATOR"),
-  upload.single("image"),
-  createEvent
-);
+// Get events by community
+router.get("/community/:communityId", protect, getEvents);
 
-/* ==============================
-   GET EVENTS BY COMMUNITY
-============================== */
-
-router.get("/:communityId", getEvents);
-
-/* ==============================
-   JOIN EVENT
-============================== */
-
+// Join event
 router.post("/:id/join", protect, joinEvent);
 
-/* ==============================
-   LEAVE EVENT
-============================== */
-
+// Leave event
 router.post("/:id/leave", protect, leaveEvent);
+
+// 🔥 Soft delete (ADMIN only)
+router.put("/:id/delete", protect, authorize("ADMIN"), deleteEvent);
+
+// 🔥 Restore (ADMIN only)
+router.put("/:id/restore", protect, authorize("ADMIN"), restoreEvent);
 
 module.exports = router;
