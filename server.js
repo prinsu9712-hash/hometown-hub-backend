@@ -1,33 +1,42 @@
 require("dotenv").config();
 const http = require("http");
 const { Server } = require("socket.io");
-
-const connectDB = require("./src/config/db");
+const mongoose = require("mongoose");
 const app = require("./src/app");
-
-connectDB();
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*"
+    origin: [
+      "http://localhost:3000",
+      "https://hometown-hub-backend.onrender.com"
+    ],
+    methods: ["GET", "POST"]
   }
 });
 
-io.on("connection", socket => {
+// 🔥 Make io globally available
+global.io = io;
+
+io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
+  socket.on("joinUserRoom", (userId) => {
+    socket.join(userId);
+  });
+
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("User disconnected");
   });
 });
 
-// Make io available in controllers
-app.set("io", io);
-
-const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB Connected");
+    server.listen(process.env.PORT || 10000, () => {
+      console.log("Server running");
+    });
+  })
+  .catch(err => console.log(err));

@@ -2,7 +2,9 @@ const Event = require("../models/Event");
 const Community = require("../models/Community");
 const Notification = require("../models/Notification");
 
-/* CREATE EVENT */
+/* ===============================
+   CREATE EVENT
+=============================== */
 exports.createEvent = async (req, res) => {
   try {
     const { title, description, date, location, community } = req.body;
@@ -23,27 +25,34 @@ exports.createEvent = async (req, res) => {
     if (communityData) {
       for (let memberId of communityData.members) {
         if (memberId.toString() !== req.user._id.toString()) {
-          await Notification.create({
+
+          const notification = await Notification.create({
             user: memberId,
             message: `New event created: ${title}`,
             type: "EVENT"
           });
+
+          // 🔥 REALTIME EMIT
+          if (global.io) {
+            global.io
+              .to(memberId.toString())
+              .emit("newNotification", notification);
+          }
         }
       }
     }
 
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("newEvent", { message: `New event: ${title}` });
-    }
-
     res.status(201).json(event);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-/* GET EVENTS WITH FILTER */
+
+/* ===============================
+   GET EVENTS (WITH FILTER)
+=============================== */
 exports.getEvents = async (req, res) => {
   try {
     const { search, date } = req.query;
@@ -67,12 +76,16 @@ exports.getEvents = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(events);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-/* JOIN EVENT */
+
+/* ===============================
+   JOIN EVENT
+=============================== */
 exports.joinEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -80,19 +93,27 @@ exports.joinEvent = async (req, res) => {
     if (!event || event.isDeleted)
       return res.status(404).json({ message: "Event not found" });
 
-    if (event.attendees.includes(req.user._id))
+    const alreadyJoined = event.attendees.some(
+      (user) => user.toString() === req.user._id.toString()
+    );
+
+    if (alreadyJoined)
       return res.status(400).json({ message: "Already joined" });
 
     event.attendees.push(req.user._id);
     await event.save();
 
     res.json({ message: "Joined event successfully" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-/* LEAVE EVENT */
+
+/* ===============================
+   LEAVE EVENT
+=============================== */
 exports.leaveEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
@@ -101,12 +122,13 @@ exports.leaveEvent = async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
 
     event.attendees = event.attendees.filter(
-      user => user.toString() !== req.user._id.toString()
+      (user) => user.toString() !== req.user._id.toString()
     );
 
     await event.save();
 
     res.json({ message: "Left event successfully" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
