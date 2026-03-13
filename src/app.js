@@ -24,6 +24,12 @@ if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
+if (process.env.FRONTEND_URLS) {
+  allowedOrigins.push(
+    ...process.env.FRONTEND_URLS.split(",").map((origin) => origin.trim()).filter(Boolean)
+  );
+}
+
 const corsOptions = {
   origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -89,7 +95,4 @@ app.use((err, req, res, next) => {
     error: err.message
   });
 });
-app.use(cors({
-  origin: "*"
-}));
 module.exports = app;
