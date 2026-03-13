@@ -49,6 +49,27 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+exports.getPublicEvents = async (req, res) => {
+  try {
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Number.isNaN(requestedLimit)
+      ? 4
+      : Math.min(Math.max(requestedLimit, 1), 12);
+
+    const upcomingEvents = await Event.find({
+      isDeleted: false,
+      date: { $gte: new Date() }
+    })
+      .populate("community", "name city")
+      .sort({ date: 1, createdAt: -1 })
+      .limit(limit);
+
+    res.json(upcomingEvents);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 /* ===============================
    GET EVENTS (FILTER + HIDE DELETED)

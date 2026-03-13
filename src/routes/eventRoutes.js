@@ -5,12 +5,15 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 const {
   createEvent,
+  getPublicEvents,
   getEvents,
   joinEvent,
   leaveEvent,
   deleteEvent,
   restoreEvent
 } = require("../controllers/eventController");
+
+router.get("/public", getPublicEvents);
 
 // Create event (ADMIN or MODERATOR)
 router.post("/", protect, authorize("ADMIN", "MODERATOR"), createEvent);

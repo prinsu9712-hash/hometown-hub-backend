@@ -14,12 +14,19 @@ const app = express();
 app.use(helmet());
 
 // 🔥 PROPER CORS CONFIG
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://hometown-hub-backend.onrender.com"
+];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 const corsOptions = {
-  origin: [
-    "http://localhost:3000", // frontend local
-    "https://hometown-hub-backend.onrender.com" // backend domain
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true
 };
 
@@ -45,6 +52,10 @@ app.use(limiter);
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/communities", require("./routes/communityRoutes"));
 app.use("/api/events", require("./routes/eventRoutes"));
+app.use("/api/posts", require("./routes/postRoutes"));
+app.use("/api/reports", require("./routes/reportRoutes"));
+app.use("/api/categories", require("./routes/categoryRoutes"));
+app.use("/api/onboarding", require("./routes/onboardingRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 
@@ -78,5 +89,7 @@ app.use((err, req, res, next) => {
     error: err.message
   });
 });
-
+app.use(cors({
+  origin: "*"
+}));
 module.exports = app;

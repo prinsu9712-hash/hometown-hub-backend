@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const app = require("./src/app");
 
 const server = http.createServer(app);
+const PORT = process.env.PORT || 5050;
 
 const io = new Server(server, {
   cors: {
@@ -35,8 +36,8 @@ io.on("connection", (socket) => {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB Connected");
-    server.listen(process.env.PORT || 10000, () => {
-      console.log("Server running");
+    server.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch(err => console.log(err));

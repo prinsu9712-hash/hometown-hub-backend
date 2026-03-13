@@ -11,6 +11,14 @@ const communitySchema = new mongoose.Schema(
       required: true
     },
     description: String,
+    rules: {
+      type: String,
+      default: ""
+    },
+    guidelines: {
+      type: String,
+      default: ""
+    },
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +27,12 @@ const communitySchema = new mongoose.Schema(
     },
 
     members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
+    pendingMembers: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
